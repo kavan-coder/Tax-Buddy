@@ -1,0 +1,775 @@
+# App Development Notebook: Tax Buddy
+
+## Table of Contents
+
+1. [Cover Page](#1-cover-page)
+2. [Executive Summary](#2-executive-summary)
+3. [Project Timeline](#3-project-timeline)
+4. [Problem Statement](#4-problem-statement)
+5. [Requirements Analysis](#5-requirements-analysis)
+6. [Brainstorming and Ideation](#6-brainstorming-and-ideation)
+7. [System Architecture](#7-system-architecture)
+8. [Technology Stack Decisions](#8-technology-stack-decisions)
+9. [Development Log](#9-development-log)
+10. [Feature Development History](#10-feature-development-history)
+11. [Debugging Journal](#11-debugging-journal)
+12. [Design Changes and Pivots](#12-design-changes-and-pivots)
+13. [Testing Documentation](#13-testing-documentation)
+14. [Performance and Optimization](#14-performance-and-optimization)
+15. [Security Considerations](#15-security-considerations)
+16. [Project Metrics](#16-project-metrics)
+17. [Lessons Learned](#17-lessons-learned)
+18. [Future Improvements](#18-future-improvements)
+19. [Final Reflection](#19-final-reflection)
+
+---
+
+## 1. Cover Page
+
+**Project Name:** Tax Buddy
+
+**Author:** Kavan Desai
+
+**Development Period:** April 2026 - June 2026
+
+**Version Number:** 1.0 Documentation Snapshot
+
+**Project Summary:** Tax Buddy is an iOS SwiftUI application designed to help first-time filers, especially teenagers, understand the federal tax filing process through guided practice and real filing assistance. The app walks users through Form 1040-style steps, explains each action in simple language, provides fake practice profiles, and estimates tax owed using a bundled tax reference and Firebase AI.
+
+**Assumption Note:** The development period is inferred from screenshot dates, repository activity, and conversation history. Some exact implementation timestamps were not available, so this notebook organizes work by documented chronological sequence.
+
+---
+
+## 2. Executive Summary
+
+Tax Buddy was created to reduce the fear and confusion that first-time filers often feel when looking at federal tax forms. Many teenagers and young adults see tax filing as intimidating because the language is technical, the forms are dense, and the consequences of mistakes feel serious. Tax Buddy addresses this by breaking the process into small, guided steps with friendly explanations.
+
+The project evolved from a simple step-by-step filing guide into a dual-mode educational application. Practice Mode teaches users with fake sample data, while Real Mode guides users through entering their own numbers. The app includes Form 1040 images, fake filer profiles, route changes based on whether the user overpaid or owes taxes, and a tax estimate generated from a bundled tax reference PDF.
+
+Key technical achievements include:
+
+- Building a SwiftUI-based iOS workflow for practice and real filing paths.
+- Creating a structured step system for Form 1040 guidance.
+- Adding randomized fake practice profiles with names, SSNs, addresses, income, withholding, and bank details.
+- Using Firebase AI with PDFKit to estimate tax owed from taxable income.
+- Implementing conditional navigation for refund versus amount-owed outcomes.
+- Iteratively refining the UI for readability, spacing, and teen-friendly language.
+- Maintaining GitHub project documentation with README and contribution guidelines.
+
+The final outcome is an educational mobile app that explains taxes in plain language and gives beginners a safer way to practice before handling real information.
+
+---
+
+## 3. Project Timeline
+
+| Date / Phase | Major Event | Outcome |
+| --- | --- | --- |
+| Initial Concept | App idea established around helping first-time filers learn taxes. | Core mission defined: make tax filing less intimidating. |
+| Early Asset Setup | JPEG tax form images were moved into `Assets.xcassets`. | App gained visual examples for filing steps. |
+| Welcome Flow | Welcome screen and navigation into guided steps were refined. | Users could move from the welcome page into Practice Mode or Real Mode. |
+| Back Navigation | A back button was added to `StepsView.swift`. | Users could return to the welcome screen from the step flow. |
+| Early Layout Refinement | Welcome text and button alignment were adjusted. | Landing screen became cleaner and more focused on the Tax Buddy title. |
+| Real Mode Income Flow | Real Mode was updated so users enter income earlier. | Later tax estimate steps could use the saved income value. |
+| Warning Language | Step 9 warning was added and later softened. | Users received a responsible estimate disclaimer without feeling intimidated. |
+| Practice Mode Redesign | Practice Mode was pivoted from generic images to fake sample filer data. | Practice became a true learning simulation. |
+| Practice Data Expansion | Ten or more fake practice profiles were added. | Users could practice with varied safe sample data. |
+| Practice UI Redesign | Practice Mode was made sleeker, more consistent, and tighter in spacing. | The app better matched the goal of engaging teen learners. |
+| Conditional Tax Outcomes | Overpayment and amount-owed routing was added first to Practice Mode and later to Real Mode. | The app could teach both refund and owed-tax scenarios. |
+| Image and Step Refinements | Specific real-mode images were added for Steps 2, 11, 15, and 17. | Real Mode gained more precise visual guidance. |
+| GitHub Publishing | `Welcome.swift`, `StepsView.swift`, and later documentation were pushed to GitHub. | Repository became a public project record. |
+| Documentation Phase | `README.md`, `CONTRIBUTING.md`, and this notebook were added. | Project became more portfolio-ready and contributor-friendly. |
+
+---
+
+## 4. Problem Statement
+
+Many first-time filers do not know where to begin when filing federal taxes. The process involves unfamiliar documents, technical vocabulary, and line-by-line form instructions. Teenagers and young workers may have W-2 income and simple filing situations, but even simple returns can feel overwhelming without guidance.
+
+Tax Buddy was intended to solve the following problem:
+
+**How can an iOS app teach first-time filers the federal tax filing flow in a way that feels clear, friendly, safe, and interactive?**
+
+Identified user pain points:
+
+- Tax forms are visually dense and difficult to understand.
+- Terms like W-2, Form 1040, taxable income, withholding, and standard deduction are unfamiliar.
+- Beginners may not know which number goes into which box.
+- Users may fear making mistakes with real personal or financial data.
+- Existing tax tools often focus on completion rather than education.
+
+Success criteria:
+
+- Users can understand the purpose of each major step.
+- Practice Mode never requires real personal data.
+- Real Mode gives simple, direct instructions.
+- Tax estimates are clearly labeled as estimates.
+- The app handles both refund and amount-owed outcomes.
+- The interface remains readable on iPhone screens.
+
+---
+
+## 5. Requirements Analysis
+
+### Functional Requirements
+
+- Provide a welcome screen with clear paths into Practice Mode and Real Mode.
+- Add a back button from the guided steps to the welcome screen.
+- Support Practice Mode with fully fake sample filer information.
+- Include fake names, SSNs, addresses, income, federal withholding, routing numbers, account numbers, and occupations.
+- Show a fake practice filer card only where it helps the lesson.
+- Guide users through Form 1040 steps.
+- Explain what to do at each step.
+- Explain what each step means in beginner-friendly wording where appropriate.
+- Let Real Mode users enter yearly income.
+- Use income to support later tax calculations.
+- Calculate or estimate taxable income after standard deduction.
+- Estimate tax owed using Firebase AI and a bundled PDF reference.
+- Show estimated tax in a visually distinct card.
+- Warn users that estimates are not professional tax advice.
+- Show amount to copy into later boxes such as Box 24, Box 33, Box 34, and Box 37.
+- Route users differently when they overpaid versus when they owe money.
+- Add or remove cards based on the current path to avoid confusion.
+- Add real-mode images for specific steps.
+- Add a hyperlink to the official Form 1040 PDF in Practice Mode Step 1.
+- Push source changes and documentation to GitHub.
+- Add repository documentation including README, contributing guide, and development notebook.
+
+### Non-Functional Requirements
+
+**Usability:** The app should use simple language, short instructions, and friendly cards suitable for teenagers.
+
+**Reliability:** Step navigation should not break when users move forward or backward, and conditional tax paths should remain consistent.
+
+**Maintainability:** Although `StepsView.swift` currently contains much of the workflow, future refactoring should separate step data, UI components, and tax calculation logic.
+
+**Security:** Practice data must always be fake. Real user data should not be committed to the repository. Firebase configuration should be handled carefully.
+
+**Performance:** The UI should remain smooth on iPhone simulators and physical devices. Images should be sized to reduce excess whitespace and avoid layout overflow.
+
+**Accessibility:** Text should be readable, cards should have enough contrast, and tap targets should remain large enough for mobile users.
+
+---
+
+## 6. Brainstorming and Ideation
+
+The project began with a guided tax app concept. Early work focused on showing step images and giving users instructions for what to enter. As development continued, the purpose became more educational: Tax Buddy should not just tell users what to do, but teach them why they are doing it.
+
+Major ideas considered:
+
+- A simple static step-by-step tax guide.
+- A Practice Mode that shows form images and fake examples.
+- A Real Mode that asks the user for their own numbers.
+- Random fake practice profiles so users can safely learn with sample information.
+- Conditional paths for overpayment versus taxes owed.
+- Softer warnings so teens are informed without being scared.
+- A clean welcome page with clear calls to action.
+
+Rejected or revised ideas:
+
+- Using only image placeholders in Practice Mode was rejected because it did not feel interactive enough.
+- Asking the user to enter taxable income in Practice Mode Step 8 was removed because Tax Buddy already provides the value.
+- Showing routing and account cards when the user owes money was removed because it could confuse learners.
+- The temporary blue tap-coordinate debug rectangle was added briefly for coordinate testing and then reverted.
+- Arrow overlays for Step 2 were considered, then reverted back to the original approach.
+
+The strongest design choice was the pivot toward teen-focused teaching. This changed the writing style, spacing, card layout, and behavior of Practice Mode.
+
+---
+
+## 7. System Architecture
+
+Tax Buddy is a SwiftUI iOS app with local assets, local PDF reference data, and Firebase AI integration.
+
+```text
+User
+  |
+  v
+SwiftUI Views
+  |
+  +--> Welcome.swift
+  |      |
+  |      +--> Practice Mode
+  |      +--> Real Mode
+  |
+  +--> StepsView.swift
+         |
+         +--> Step data model
+         +--> Practice profile model
+         +--> Guided UI cards
+         +--> User input state
+         +--> Conditional navigation
+         +--> PDFKit text extraction
+         +--> Firebase AI tax estimate request
+```
+
+### Frontend Structure
+
+The frontend is built in SwiftUI. `Welcome.swift` handles the landing page and mode selection. `StepsView.swift` handles the full guided tax workflow.
+
+### Backend / Cloud Services
+
+The app uses Firebase AI / Google AI backend for tax estimation. Instead of a custom backend server, the app sends a prompt containing the taxable income and relevant PDF tax reference text.
+
+### Data Sources
+
+- Bundled practice profile data in Swift structs.
+- Bundled form images in `Assets.xcassets`.
+- Bundled `tax analysis.pdf` for tax reference.
+- User-entered values in SwiftUI state.
+
+### Third-Party Integrations
+
+- Firebase Core for app configuration.
+- Firebase AI for generative model access.
+- PDFKit for reading text from the bundled PDF.
+
+---
+
+## 8. Technology Stack Decisions
+
+| Technology | Purpose | Alternatives Considered | Reason Chosen |
+| --- | --- | --- | --- |
+| SwiftUI | Build the iOS interface. | UIKit, Flutter, React Native. | Native Apple UI framework with fast iteration and clean declarative views. |
+| Swift 5 | Main programming language. | Kotlin Multiplatform, Dart, JavaScript. | Required for native SwiftUI app development. |
+| Xcode | iOS development environment. | CLI-only build flow. | Standard tooling for iOS simulator, device builds, assets, and project management. |
+| Firebase Core | Firebase app setup. | Manual API client configuration. | Needed for Firebase service initialization. |
+| Firebase AI / Google AI | Estimate tax owed from taxable income and bundled reference material. | Hardcoded tax table, external backend API. | Faster to integrate and flexible for reading tax reference context. |
+| PDFKit | Extract text from bundled PDF reference. | Manual transcription, external PDF parser. | Native Apple framework for PDF handling. |
+| Assets.xcassets | Store step images and visual assets. | Raw file bundle paths. | Standard iOS asset management with image name lookup. |
+| GitHub | Version control and project sharing. | Local-only development. | Supports portfolio visibility, collaboration, README, and contributing docs. |
+
+---
+
+## 9. Development Log
+
+### Entry 1: Initial App Direction
+
+**Objective:** Create a mobile app that helps first-time filers understand tax filing.
+
+**Work Completed:** Established the idea of a beginner-focused tax guide with step-by-step instructions.
+
+**Code or System Changes:** The app structure was centered around SwiftUI views, especially a welcome screen and a step workflow.
+
+**Problems Encountered:** The initial concept risked becoming a static checklist rather than an educational experience.
+
+**Final Resolution:** The app direction was refined toward learning, not just filing.
+
+**Lessons Learned:** Educational apps need explanations and emotional clarity, not just instructions.
+
+### Entry 2: Asset Organization
+
+**Objective:** Move tax-related JPEG images into the app asset catalog.
+
+**Work Completed:** JPEG images were added to `Assets.xcassets` and old source-folder copies were removed.
+
+**Problems Encountered:** Asset names needed to match SwiftUI image references.
+
+**Final Resolution:** Step assets were organized by step number and referenced from the workflow.
+
+**Lessons Learned:** Consistent asset naming prevents broken images and simplifies future additions.
+
+### Entry 3: Welcome Screen Navigation
+
+**Objective:** Improve the entry point into the app.
+
+**Work Completed:** The welcome page was refined, and buttons were aligned with the Tax Buddy title. A path into Practice Mode and Real Mode was established.
+
+**Problems Encountered:** Early layout had text and button alignment issues.
+
+**Final Resolution:** The welcome page became more focused and visually balanced.
+
+**Lessons Learned:** The first screen sets the emotional tone of the app.
+
+### Entry 4: Back Button in Step Flow
+
+**Objective:** Allow users to return from the step guide to the welcome page.
+
+**Work Completed:** Added a back button to `StepsView.swift`.
+
+**Problems Encountered:** Navigation needed to work without disrupting step state.
+
+**Final Resolution:** The view uses dismiss behavior to return to the previous screen.
+
+**Lessons Learned:** Beginner apps should always give users a clear escape route.
+
+### Entry 5: Real Mode Income Collection
+
+**Objective:** Capture income earlier so later tax calculations could be faster.
+
+**Work Completed:** Real Mode was updated so users enter income at an early step. The value is stored for later taxable income calculation.
+
+**Problems Encountered:** The app needed to separate raw yearly income from taxable income.
+
+**Final Resolution:** State variables were added for entered income, withholding, saved taxable income, and calculation flow.
+
+**Lessons Learned:** Tax workflows depend heavily on carrying values forward accurately.
+
+### Entry 6: Tax Estimate Warning
+
+**Objective:** Add a responsible warning near the tax estimate.
+
+**Work Completed:** Step 9 was updated to explain that the tax amount is an estimate and that users should consult a CPA or tax professional.
+
+**Problems Encountered:** The original warning tone felt too intimidating for teenagers.
+
+**Final Resolution:** The warning was rewritten in a softer, more supportive voice.
+
+**Lessons Learned:** Safety disclaimers must be clear, but tone matters for young users.
+
+### Entry 7: Practice Mode Pivot
+
+**Objective:** Redesign Practice Mode to be more realistic and interactive.
+
+**Work Completed:** Practice Mode was changed to use fake random sample filer data, including income, withholding, SSN, name, address, routing number, and account number.
+
+**Problems Encountered:** A simple image-based practice flow did not teach enough.
+
+**Final Resolution:** Practice profiles became the center of the practice experience.
+
+**Lessons Learned:** Safe fake data lets users learn realistic workflows without privacy risk.
+
+### Entry 8: Practice Step Refinement
+
+**Objective:** Improve each Practice Mode step.
+
+**Work Completed:** Image placeholders were removed from many steps, text was simplified, important values were bolded, and entry amount cards were added where users needed to copy values.
+
+**Problems Encountered:** Some cards had too much whitespace or truncated text.
+
+**Final Resolution:** Layout spacing was tightened and content cards were made more consistent.
+
+**Lessons Learned:** Mobile educational content must be concise and visually scannable.
+
+### Entry 9: Conditional Refund and Amount-Owed Paths
+
+**Objective:** Teach users both possible tax outcomes.
+
+**Work Completed:** Practice Mode was updated so users follow one path if they overpaid and another if they owe money. Real Mode later received the same smooth transition behavior.
+
+**Problems Encountered:** Some cards, such as routing number information, were inappropriate when the user owed money.
+
+**Final Resolution:** Cards are conditionally shown or hidden based on overpayment status.
+
+**Lessons Learned:** Conditional workflows reduce confusion when financial outcomes differ.
+
+### Entry 10: Real Mode Visual Additions
+
+**Objective:** Add targeted real-mode images to help users locate form areas.
+
+**Work Completed:** Images were added for real-mode Steps 2, 11, 15, and 17. Step 2's explanatory card was removed so the image and action instruction could be clearer.
+
+**Problems Encountered:** Images had to sit between the title and instruction cards without creating excessive whitespace.
+
+**Final Resolution:** Step data gained image references and conditional display behavior.
+
+**Lessons Learned:** Visual guidance is most useful when placed near the exact instruction it supports.
+
+### Entry 11: Welcome Screen Polish
+
+**Objective:** Make the welcome page feel more polished and engaging.
+
+**Work Completed:** The real filing button changed from red to a sleek blue, badges gained pulse animation, the Continue button gained a contrasting color, and spacing between cards was improved.
+
+**Problems Encountered:** The call-to-action needed to stand out without overwhelming the screen.
+
+**Final Resolution:** The screen became more intentional, visually balanced, and action-oriented.
+
+**Lessons Learned:** Small motion and color changes can guide attention when used carefully.
+
+### Entry 12: Debug Coordinate Experiment
+
+**Objective:** Test tap coordinate printing in `StepsView.swift`.
+
+**Work Completed:** A temporary blue rectangle was added that printed local tap coordinates.
+
+**Problems Encountered:** The debug rectangle visibly affected all steps and was not part of the product UI.
+
+**Final Resolution:** The debug code was reverted after verification.
+
+**Lessons Learned:** Temporary debug tools should be removed quickly to avoid product clutter.
+
+### Entry 13: Repository Documentation
+
+**Objective:** Make the GitHub repository more professional.
+
+**Work Completed:** Added `README.md`, `CONTRIBUTING.md`, and this development notebook.
+
+**Problems Encountered:** GitHub pushes required syncing with remote updates.
+
+**Final Resolution:** Changes were rebased and pushed without overwriting remote work.
+
+**Lessons Learned:** Documentation is part of engineering quality, not an afterthought.
+
+---
+
+## 10. Feature Development History
+
+### Welcome Screen
+
+**Original Idea:** Provide a starting page for users to choose a filing path.
+
+**Design Decisions:** Use friendly cards, strong calls to action, and short text.
+
+**Implementation Details:** `Welcome.swift` contains mode buttons, badges, spacing, and animation polish.
+
+**Revisions:** Button color changed, badges pulsed, card spacing increased, and completion messaging was fixed.
+
+**Final Version:** A friendly landing screen that routes to Practice Mode or Real Mode.
+
+### Practice Mode
+
+**Original Idea:** Let users practice with example documents.
+
+**Design Decisions:** Replace generic practice with fake profiles so users can copy realistic details safely.
+
+**Implementation Details:** `PracticeProfile` stores fake data, and practice steps use formatted values in instructions and amount cards.
+
+**Challenges:** Avoiding awkward prompts where the app already knew the answer.
+
+**Final Version:** A guided simulation using fake data and simplified lessons.
+
+### Real Mode
+
+**Original Idea:** Guide users through their own tax numbers.
+
+**Design Decisions:** Keep wording simpler than traditional tax instructions and align behavior with Practice Mode.
+
+**Implementation Details:** Real Mode stores entered income and withholding, computes taxable income, and routes based on overpayment.
+
+**Challenges:** Maintaining a smooth transition for users who owe tax instead of receiving a refund.
+
+**Final Version:** A guided real-number workflow with estimate disclaimers and conditional paths.
+
+### Tax Estimation
+
+**Original Idea:** Estimate tax using taxable income.
+
+**Design Decisions:** Use the bundled PDF tax reference with Firebase AI rather than manually hardcoding every tax table entry.
+
+**Implementation Details:** PDFKit extracts reference text, and Firebase AI receives a prompt asking for a single tax number.
+
+**Challenges:** The output must be parsed and shown clearly.
+
+**Final Version:** Estimated tax is displayed in a styled card and reused by later steps.
+
+### Conditional Overpayment Routing
+
+**Original Idea:** Show refund steps when users overpaid.
+
+**Design Decisions:** Add an alternate path for users who owe money.
+
+**Implementation Details:** The app compares withholding against estimated tax and chooses the correct next steps.
+
+**Challenges:** Avoiding irrelevant bank information when no refund exists.
+
+**Final Version:** Both Practice Mode and Real Mode support refund and amount-owed paths.
+
+### GitHub Documentation
+
+**Original Idea:** Put source files on GitHub.
+
+**Design Decisions:** Add professional documentation for readers and contributors.
+
+**Implementation Details:** Root-level `README.md`, `CONTRIBUTING.md`, and `APP_DEVELOPMENT_NOTEBOOK.md`.
+
+**Final Version:** Repository is more suitable for portfolios and collaboration.
+
+---
+
+## 11. Debugging Journal
+
+### Bug 1: Congratulation Message Was Hard to See
+
+**Symptoms:** The celebration message appeared over the welcome screen but was too dark or low contrast.
+
+**Root Cause:** Overlay styling reduced readability against the background.
+
+**Investigation Process:** The screenshot showed the message card blending into underlying content.
+
+**Fix Implemented:** Adjusted the message styling so it could be seen clearly.
+
+**Verification:** Visual review confirmed the message was more readable.
+
+### Bug 2: Practice Step Text Was Truncated
+
+**Symptoms:** In Step 5 and Step 12, users could not see the full "What to do" text.
+
+**Root Cause:** Card height and layout constraints did not allow enough vertical text space.
+
+**Investigation Process:** Screenshot review showed text ending with ellipsis.
+
+**Fix Implemented:** Adjusted layout behavior, spacing, and fixed-size text handling.
+
+**Verification:** Later UI changes reduced whitespace and improved text visibility.
+
+### Bug 3: Unwanted First Practice Page Design
+
+**Symptoms:** Practice Mode opened to a static Step 1 image-driven page, which did not match the desired learning experience.
+
+**Root Cause:** Practice Mode had not yet been redesigned around fake sample data.
+
+**Fix Implemented:** Rebuilt Practice Mode to start from a fake practice filer and guided lessons.
+
+**Verification:** Practice Mode became more interactive and educational.
+
+### Bug 4: Incorrect or Confusing Conditional Cards
+
+**Symptoms:** When the user owed money, routing or refund-related cards could still appear.
+
+**Root Cause:** Some UI components were not gated by overpayment status.
+
+**Fix Implemented:** Conditional display logic was added so routing/account cards only appear when relevant.
+
+**Verification:** Step 15 no-overpayment path no longer shows the routing number card.
+
+### Bug 5: Temporary Debug Rectangle Affected UI
+
+**Symptoms:** A blue `300x300` rectangle appeared in `StepsView`.
+
+**Root Cause:** Debug coordinate test view was added unconditionally.
+
+**Fix Implemented:** Removed the `TapCoordinateDebugBox` view and its usage.
+
+**Verification:** Search confirmed the debug code was gone, and the Xcode build succeeded.
+
+### Bug 6: GitHub Push Rejected
+
+**Symptoms:** Pushing `CONTRIBUTING.md` was rejected because remote `main` had new work.
+
+**Root Cause:** The local clone was behind GitHub.
+
+**Fix Implemented:** Ran `git pull --rebase origin main`, then pushed again.
+
+**Verification:** Push succeeded after rebase.
+
+---
+
+## 12. Design Changes and Pivots
+
+The largest pivot was Practice Mode. It changed from a form-image walkthrough into an educational simulation using fake profiles. This made the app safer, more interactive, and more appropriate for teens learning for the first time.
+
+Another important design change was the language strategy. The app moved away from formal tax wording and toward simpler explanations. This was especially important in Real Mode, where users may already feel nervous entering their own numbers.
+
+The conditional routing system was also a major design change. Instead of assuming all users receive a refund, the app now handles the real possibility of owing money. This made the workflow more accurate and reduced confusion.
+
+Visual design changed gradually through spacing reductions, card consistency, stronger call-to-action buttons, badge pulse animations, and image sizing adjustments.
+
+Risks accepted:
+
+- `StepsView.swift` became large because it contains data models, UI, navigation, and tax estimation logic.
+- Firebase AI output depends on prompt quality and response parsing.
+- The app currently has limited automated testing.
+
+Benefits gained:
+
+- Faster iteration.
+- Clear educational flow.
+- A more complete MVP.
+- Better alignment with the target audience.
+
+---
+
+## 13. Testing Documentation
+
+### Testing Strategy
+
+Testing focused on simulator builds, manual UI review, and step-by-step flow verification.
+
+### Build Testing
+
+The project was repeatedly built with:
+
+```bash
+xcodebuild -project /Users/kavan_desai/Desktop/Tax_Buddy/Tax_Buddy.xcodeproj -scheme Tax_Buddy -sdk iphonesimulator build
+```
+
+Build success was used to verify Swift syntax, project configuration, asset references, and Firebase package compilation.
+
+### User Flow Testing
+
+Manual testing covered:
+
+- Welcome screen navigation.
+- Practice Mode step progression.
+- Real Mode step progression.
+- Back button behavior.
+- Step 9 estimate display.
+- Refund path behavior.
+- Amount-owed path behavior.
+- Visibility of cards on iPhone-sized screens.
+
+### Edge Cases Tested
+
+- User overpaid tax.
+- User owed tax.
+- Practice profile values with different income and withholding.
+- Missing or removed UI elements such as hidden cards.
+- Reverted debug code.
+
+### Known Testing Gaps
+
+- No dedicated unit test target exists yet.
+- Tax estimate parsing should be tested with more AI response formats.
+- More physical-device testing would improve confidence.
+- Accessibility testing should be expanded.
+
+---
+
+## 14. Performance and Optimization
+
+The main performance concerns were UI layout, image sizing, and Firebase AI latency.
+
+Optimizations and refinements:
+
+- Reduced excess whitespace between objects in Practice Mode.
+- Shrunk image placeholders where they created large gaps.
+- Removed unnecessary images from Practice Steps 3-14 to create a more centered lesson experience.
+- Used local bundled assets for fast image loading.
+- Kept the tax reference PDF bundled locally instead of requiring network fetches.
+
+Potential bottlenecks:
+
+- Firebase AI response time when calculating tax.
+- Large `StepsView.swift` file increasing maintenance complexity.
+- Asset size if many high-resolution images are added.
+
+Future optimization opportunities:
+
+- Cache tax estimates for repeated inputs.
+- Replace AI tax lookup with deterministic tax table logic for simple cases.
+- Compress image assets.
+- Extract step data into separate files.
+
+---
+
+## 15. Security Considerations
+
+Tax Buddy handles sensitive concepts, so privacy and safety are important even though the app is educational.
+
+Security considerations:
+
+- Practice Mode uses fake data only.
+- Real names, real SSNs, real bank information, and real tax documents should never be committed.
+- `GoogleService-Info.plist` is project configuration and should be treated carefully.
+- Tax estimates are labeled as educational estimates, not professional advice.
+- The app should avoid logging real user-entered tax information in production.
+
+Current authentication:
+
+- No user authentication system is documented in the current app flow.
+
+Data storage:
+
+- The app primarily uses local state and bundled resources.
+- No database is currently documented for storing user tax data.
+
+Future security improvements:
+
+- Add privacy copy explaining what data stays on device.
+- Avoid sending unnecessary personal data to AI services.
+- Consider local deterministic tax calculations for sensitive flows.
+- Add secure storage only if persistent user data becomes necessary.
+
+---
+
+## 16. Project Metrics
+
+Approximate project metrics based on conversation and repository history:
+
+- **Development sessions documented:** 30+
+- **Major Swift files edited:** 2 primary files (`Welcome.swift`, `StepsView.swift`)
+- **Supporting Swift files present:** `Tax_BuddyApp.swift`, `Opening.swift`
+- **Practice profiles added:** 10+
+- **Main user modes:** 2
+- **Major workflow steps:** Approximately 15-18 depending on conditional path
+- **Major bugs fixed:** 6 documented
+- **Documentation files added:** 3
+- **Technologies used:** SwiftUI, Swift, Xcode, Firebase Core, Firebase AI, PDFKit, GitHub
+- **Primary target platform:** iOS
+
+Milestones reached:
+
+- Practice Mode redesigned around fake data.
+- Real Mode supports smoother conditional tax outcomes.
+- GitHub repo includes README and contribution guide.
+- App builds successfully after major changes.
+- Development notebook created for portfolio documentation.
+
+---
+
+## 17. Lessons Learned
+
+### Technical Lessons
+
+- SwiftUI makes UI iteration fast, but large views can become difficult to maintain.
+- State management is critical when values must carry across many steps.
+- Conditional navigation should be designed early when workflows have multiple outcomes.
+- Asset naming consistency prevents many UI bugs.
+- AI-generated numerical output should be parsed carefully and verified.
+
+### Design Lessons
+
+- Beginner-friendly language is a product feature.
+- Teens need reassurance and clarity, not intimidating warnings.
+- Removing unnecessary visual elements can make a screen feel more focused.
+- Consistent cards make repeated learning steps easier to understand.
+- Small animations can guide attention when used intentionally.
+
+### Project Management Lessons
+
+- Frequent small commits are easier to reason about.
+- Documentation should grow alongside the project.
+- Reverting experiments is normal and healthy.
+- GitHub sync issues should be solved with rebase or pull before pushing.
+
+### Software Engineering Lessons
+
+- MVPs often begin messy, but clear future refactors can control technical debt.
+- User feedback through screenshots is extremely valuable.
+- A working prototype can evolve significantly through iteration.
+- Safety and privacy matter even in educational apps.
+
+---
+
+## 18. Future Improvements
+
+### Short-Term Improvements
+
+- Add unit tests for currency parsing, overpayment calculation, and step routing.
+- Extract practice and real step definitions out of `StepsView.swift`.
+- Improve accessibility labels and Dynamic Type support.
+- Add loading and error states for Firebase AI responses.
+- Add stronger validation for user-entered income and withholding.
+- Review every step for teen-friendly wording.
+
+### Long-Term Roadmap
+
+- Build a deterministic tax calculator for common simple filing situations.
+- Add more practice scenarios, such as multiple jobs or different withholding levels.
+- Add a progress tracker for users.
+- Add a glossary for W-2, Form 1040, standard deduction, withholding, refund, and tax owed.
+- Add offline practice mode that does not depend on AI.
+- Add exportable learning summaries after practice completion.
+
+### Stretch Goals
+
+- Create an interactive Form 1040 overlay where users tap highlighted boxes.
+- Add voice narration for each step.
+- Add quizzes after practice sections.
+- Add multilingual beginner explanations.
+- Add teacher/classroom mode for financial literacy lessons.
+- Build a companion web landing page for the app.
+
+---
+
+## 19. Final Reflection
+
+Tax Buddy evolved from a guided tax form app into a more thoughtful educational tool. The project demonstrates how software design changes when the target user becomes clearer. Once the app focused on teenagers and first-time filers, decisions about wording, spacing, warnings, fake data, and conditional paths became easier to make.
+
+The biggest challenge was balancing accuracy with simplicity. Tax filing is serious, but the app needed to avoid sounding scary. The solution was to be direct, honest, and supportive: explain what the number means, show where it goes, and remind users that estimates are not professional advice.
+
+The biggest technical challenge was managing a complex multi-step workflow inside `StepsView.swift`. The app tracks practice data, real user inputs, tax estimates, images, cards, and conditional navigation. While this worked for fast iteration, it also revealed the need for future refactoring into services and dedicated data sources.
+
+The biggest success was the Practice Mode pivot. By using fake filer profiles, Tax Buddy became safer and more realistic. Users can learn with names, SSNs, addresses, income, withholding, and bank details without risking real personal data. That change made the project feel less like a static guide and more like a hands-on learning simulation.
+
+Overall, Tax Buddy shows engineering growth across product thinking, UI design, SwiftUI implementation, debugging, GitHub workflow, and documentation. The final app is not just a tax helper; it is a learning experience built to make an intimidating adult task feel understandable for beginners.
