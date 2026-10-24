@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct WelcomeView: View {
     @AppStorage("showTaxBuddyCelebration") private var showCelebration = false
@@ -72,6 +73,9 @@ struct WelcomeView: View {
                                     badgeText: "Best for learning"
                                 )
                             }
+                            .simultaneousGesture(TapGesture().onEnded {
+                                SoundManager.shared.playClick()
+                            })
                             .buttonStyle(.plain)
 
                             NavigationLink {
@@ -86,6 +90,9 @@ struct WelcomeView: View {
                                     badgeText: "For real filing help"
                                 )
                             }
+                            .simultaneousGesture(TapGesture().onEnded {
+                                SoundManager.shared.playClick()
+                            })
                             .buttonStyle(.plain)
                         }
 

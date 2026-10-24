@@ -1,6 +1,8 @@
 import SwiftUI
 import FirebaseAI
 import PDFKit
+import AVFoundation
+
 enum FilingMode {
     case practice
     case real
@@ -518,6 +520,7 @@ You will ONLY be filling out Form 1040.
             VStack(spacing: isRealMode ? 22 : 14) {
                 HStack {
                     Button {
+                        SoundManager.shared.playClick()
                         dismiss()
                     } label: {
                         Image(systemName: "chevron.left")
@@ -758,6 +761,7 @@ You will ONLY be filling out Form 1040.
                     }
                     HStack(spacing: isRealMode ? 18 : 12) {
                         Button {
+                            SoundManager.shared.playClick()
                             handleBack()
                         } label: {
                             ZStack {
@@ -776,6 +780,7 @@ You will ONLY be filling out Form 1040.
                         .disabled(backButtonDisabled)
                         .opacity(backButtonDisabled ? 0.55 : 1)
                         Button {
+                            SoundManager.shared.playClick()
                             handleNext()
                         } label: {
                             ZStack {
