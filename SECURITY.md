@@ -17,8 +17,9 @@ If you find a security issue, please do not post sensitive details publicly in a
 
 Instead, contact the project maintainer directly through GitHub:
 
-- GitHub profile: [MintyCoder2640](https://github.com/MintyCoder2640)
-- Repository: [MyApp2](https://github.com/MintyCoder2640/MyApp2)
+- Name: Kavan Desai
+- GitHub profile: [kavan-coder](https://github.com/kavan-coder)
+- Repository: [Tax Buddy](https://github.com/kavan-coder/Tax-Buddy/tree/main)
 
 When reporting a security issue, please include:
 
