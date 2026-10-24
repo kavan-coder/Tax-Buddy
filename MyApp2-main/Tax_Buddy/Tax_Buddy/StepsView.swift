@@ -1,6 +1,4 @@
 import SwiftUI
-import FirebaseAI
-import PDFKit
 import AVFoundation
 
 enum FilingMode {
@@ -185,15 +183,12 @@ struct StepsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("showTaxBuddyCelebration") private var showCelebration = false
     private let standardDeductionAmount = 15750.0
-    private let model = FirebaseAI.firebaseAI(backend: .googleAI())
-        .generativeModel(modelName: "gemini-2.5-flash")
     @State private var taxableIncome = ""
     @State private var enteredIncome = ""
     @State private var enteredWithholding = ""
     @State private var savedTaxableIncome = ""
     @State private var aiResponse = ""
     @State private var isLoading = false
-    @State private var pdfText = ""
     @State private var currentStep = 1
     @State private var practiceProfile = PracticeProfile.samples[0]
     private var practiceSteps: [FilingStep] {
@@ -303,7 +298,7 @@ You will ONLY be filling out Form 1040.
         currentActiveStep.requiresInput
     }
     private var nextButtonDisabled: Bool {
-        if isLoading || pdfText.isEmpty { return true }
+        if isLoading { return true }
         if inputEnabled {
             return taxableIncome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
@@ -813,7 +808,6 @@ You will ONLY be filling out Form 1040.
             if !isRealMode {
                 practiceProfile = PracticeProfile.samples.randomElement() ?? PracticeProfile.samples[0]
             }
-            loadBundledPDF()
         }
     }
     private func stepInstructionText() -> String {
@@ -824,23 +818,6 @@ You will ONLY be filling out Form 1040.
             return "Tax Buddy has calculated the sample tax amount for \(practiceProfile.firstName) based on the taxable income from Step 8."
         }
         return currentActiveStep.instruction
-    }
-    func loadBundledPDF() {
-        guard let url = Bundle.main.url(forResource: "tax analysis", withExtension: "pdf") else {
-            aiResponse = "PDF not found in bundle."
-            return
-        }
-        guard let document = PDFDocument(url: url) else {
-            aiResponse = "Failed to read PDF."
-            return
-        }
-        var text = ""
-        for i in 0..<document.pageCount {
-            if let page = document.page(at: i), let pageText = page.string {
-                text += pageText + "\n"
-            }
-        }
-        pdfText = text
     }
     private func handleBack() {
         if currentStep > 1 {
@@ -884,78 +861,47 @@ You will ONLY be filling out Form 1040.
             }
             taxableIncome = ""
             currentStep = 9
-            if isRealMode {
-                calculateRealTax()
-            } else {
-                calculatePracticeTax()
-            }
+            calculateLocalTax()
             return
         }
         if currentStep < activeSteps.count {
             currentStep += 1
         }
     }
-    private func calculatePracticeTax() {
-        let cleanedIncome = savedTaxableIncome
-            .replacingOccurrences(of: ",", with: "")
-            .replacingOccurrences(of: "$", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        let prompt = """
-        Use the following tax document to calculate the tax owed.
-        The user is practicing with sample numbers for learning purposes.
-        The taxable income is: \(cleanedIncome)
-        Return only one number.
-        No explanation.
-        DOCUMENT:
-        \(pdfText)
-        """
-        isLoading = true
-        Task {
-            do {
-                let response = try await model.generateContent(prompt)
-                let rawText = response.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "No response found"
-                aiResponse = extractNumber(from: rawText)
-            } catch {
-                aiResponse = "Error: \(error.localizedDescription)"
-            }
-            isLoading = false
-        }
+    private func calculateLocalTax() {
+        let income = parseCurrencyString(savedTaxableIncome) ?? 0
+        let estimatedTax = singleFilerTax(for: max(income, 0))
+        aiResponse = String(format: "%.2f", estimatedTax)
     }
-    private func calculateRealTax() {
-        let cleanedIncome = savedTaxableIncome
-            .replacingOccurrences(of: ",", with: "")
-            .replacingOccurrences(of: "$", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        let prompt = """
-        Use the following tax document to calculate the tax owed.
-        The user is filing their own taxes.
-        The taxable income is: \(cleanedIncome)
-        Return only one number.
-        No explanation.
-        DOCUMENT:
-        \(pdfText)
-        """
-        isLoading = true
-        Task {
-            do {
-                let response = try await model.generateContent(prompt)
-                let rawText = response.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "No response found"
-                aiResponse = extractNumber(from: rawText)
-            } catch {
-                aiResponse = "Error: \(error.localizedDescription)"
+
+    // 2025 federal single-filer brackets. Update these values when the tax year changes.
+    private func singleFilerTax(for taxableIncome: Double) -> Double {
+        let brackets: [(limit: Double, rate: Double)] = [
+            (11925, 0.10),
+            (48475, 0.12),
+            (103350, 0.22),
+            (197300, 0.24),
+            (250525, 0.32),
+            (626350, 0.35),
+            (Double.greatestFiniteMagnitude, 0.37)
+        ]
+
+        var remainingIncome = taxableIncome
+        var lowerLimit = 0.0
+        var tax = 0.0
+
+        for bracket in brackets {
+            let incomeInBracket = min(max(remainingIncome, 0), bracket.limit - lowerLimit)
+            tax += incomeInBracket * bracket.rate
+            remainingIncome -= incomeInBracket
+            lowerLimit = bracket.limit
+
+            if remainingIncome <= 0 {
+                break
             }
-            isLoading = false
         }
-    }
-    func extractNumber(from text: String) -> String {
-        let pattern = #"\d+(?:\.\d+)?"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
-        let range = NSRange(text.startIndex..., in: text)
-        if let match = regex.firstMatch(in: text, options: [], range: range),
-           let matchRange = Range(match.range, in: text) {
-            return String(text[matchRange])
-        }
-        return text
+
+        return tax
     }
     private func parseCurrencyString(_ text: String) -> Double? {
         let cleaned = text
