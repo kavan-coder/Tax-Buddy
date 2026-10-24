@@ -268,9 +268,9 @@ You will ONLY be filling out Form 1040.
         if hasOverpayment {
             steps.append(contentsOf: [
                 FilingStep(number: 14, title: "Box 35a - Amount Wanted Back", instruction: "Copy the refund amount from **Box 34** into **Box 35a**.", definition: "This is the money the IRS would send back to you.", requiresInput: false, inputLabel: "", imageName: ""),
-                FilingStep(number: 15, title: "Box 35b - Routing Number", instruction: "Find your routing number on your bank statement and write it on the form.", definition: "A routing number tells the IRS which bank to send your refund to.", requiresInput: false, inputLabel: "", imageName: ""),
+                FilingStep(number: 15, title: "Box 35b - Routing Number", instruction: "Find your routing number on your bank statement and write it on the form.", definition: "A routing number tells the IRS which bank to send your refund to.", requiresInput: false, inputLabel: "", imageName: "Step_15_R"),
                 FilingStep(number: 16, title: "Box 35c - Account Type", instruction: "Choose your account type, usually **checking**.", definition: "This tells the IRS what kind of bank account you use.", requiresInput: false, inputLabel: "", imageName: ""),
-                FilingStep(number: 17, title: "Box 35d - Account Number", instruction: "Find your account number on your bank statement and write it on the form.", definition: "This tells the IRS which exact account should get the refund.", requiresInput: false, inputLabel: "", imageName: ""),
+                FilingStep(number: 17, title: "Box 35d - Account Number", instruction: "Find your account number on your bank statement and write it on the form.", definition: "This tells the IRS which exact account should get the refund.", requiresInput: false, inputLabel: "", imageName: "Step_17_R"),
                 FilingStep(number: 18, title: "Signature", instruction: "Sign the form, add today’s date, and write your job or occupation.", definition: "Your signature says the form is complete and honest.", requiresInput: false, inputLabel: "", imageName: "")
             ])
         } else {
@@ -590,6 +590,11 @@ You will ONLY be filling out Form 1040.
 
                                 if isRealMode && currentActiveStep.number == 11 {
                                     ZoomablePracticeImage(imageName: "Step_11_R")
+                                        .frame(maxHeight: 170)
+                                }
+
+                                if isRealMode && (currentActiveStep.number == 15 || currentActiveStep.number == 17) {
+                                    ZoomablePracticeImage(imageName: currentActiveStep.imageName)
                                         .frame(maxHeight: 170)
                                 }
 
